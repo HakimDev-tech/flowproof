@@ -1,0 +1,50 @@
+
+import { describe, expect, it } from "vitest";
+import { workflowGraph } from "../src/graph/workflow.graph.js";
+
+describe("FlowProof workflow graph", () => {
+  it("parses and validates a valid workflow", async () => {
+    const result = await workflowGraph.invoke({
+      rawInput: JSON.stringify({
+        name: "My workflow",
+      }),
+    });
+
+    expect(result.parsedWorkflow).toEqual({
+      name: "My workflow",
+    });
+
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it("detects invalid JSON", async () => {
+    const result = await workflowGraph.invoke({
+      rawInput: "{ invalid json }",
+    });
+
+    expect(result.parsedWorkflow).toBeNull();
+
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "INVALID_JSON",
+        severity: "error",
+      }),
+    );
+  });
+
+  it("detects a missing workflow name", async () => {
+    const result = await workflowGraph.invoke({
+      rawInput: JSON.stringify({
+        nodes: [],
+        connections: {},
+      }),
+    });
+
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "MISSING_WORKFLOW_NAME",
+        severity: "warning",
+      }),
+    );
+  });
+});
