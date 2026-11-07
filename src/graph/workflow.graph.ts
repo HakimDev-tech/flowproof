@@ -8,19 +8,33 @@ const parseInput = (state: typeof FlowProofState.State) => {
     const parsedWorkflow: unknown = JSON.parse(state.rawInput);
 
     return { parsedWorkflow };
-  } catch {
-    return {
-      parsedWorkflow: null,
-      diagnostics: [
-        {
-          code: "INVALID_JSON",
-          severity: "error" as const,
-          message: "Input is not valid JSON",
-        },
-      ],
-    };
+  } catch (error) {
+  if (!(error instanceof SyntaxError)) {
+    throw error;
   }
+
+  return {
+    parsedWorkflow: null,
+    diagnostics: [
+      {
+        code: "INVALID_JSON",
+        severity: "error" as const,
+        message: "Input is not valid JSON",
+      },
+    ],
+  };
+}
 };
+
+export function routeAfterParsing(
+  state: typeof FlowProofState.State,
+) {
+  if (state.parsedWorkflow === null) {
+    return "invalid";
+  }
+
+  return "valid";
+}
 
 // Node 2 : vérifie la structure minimale du workflow.
 const validateInput = (state: typeof FlowProofState.State) => {
@@ -71,6 +85,9 @@ export const workflowGraph = new StateGraph(FlowProofState)
   .addNode("parseInput", parseInput)
   .addNode("validateInput", validateInput)
   .addEdge(START, "parseInput")
-  .addEdge("parseInput", "validateInput")
+  .addConditionalEdges("parseInput", routeAfterParsing, {
+    invalid: END,
+    valid: "validateInput",
+  })
   .addEdge("validateInput", END)
   .compile();
