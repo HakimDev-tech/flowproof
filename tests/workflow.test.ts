@@ -1,14 +1,20 @@
-
 import { describe, expect, it } from "vitest";
+import { createFlowProofRunConfig } from "../src/graph/config.js";
 import { workflowGraph } from "../src/graph/workflow.graph.js";
 
 describe("FlowProof workflow graph", () => {
   it("parses and validates a valid workflow", async () => {
-    const result = await workflowGraph.invoke({
-      rawInput: JSON.stringify({
-        name: "My workflow",
+    const result = await workflowGraph.invoke(
+      {
+        rawInput: JSON.stringify({
+          name: "My workflow",
+        }),
+      },
+      createFlowProofRunConfig({
+        threadId: "workflow-valid-test",
+        source: "test",
       }),
-    });
+    );
 
     expect(result.parsedWorkflow).toEqual({
       name: "My workflow",
@@ -18,9 +24,15 @@ describe("FlowProof workflow graph", () => {
   });
 
   it("detects invalid JSON", async () => {
-    const result = await workflowGraph.invoke({
-      rawInput: "{ invalid json }",
-    });
+    const result = await workflowGraph.invoke(
+      {
+        rawInput: "{ invalid json }",
+      },
+      createFlowProofRunConfig({
+        threadId: "workflow-invalid-json-test",
+        source: "test",
+      }),
+    );
 
     expect(result.parsedWorkflow).toBeNull();
 
@@ -33,12 +45,18 @@ describe("FlowProof workflow graph", () => {
   });
 
   it("detects a missing workflow name", async () => {
-    const result = await workflowGraph.invoke({
-      rawInput: JSON.stringify({
-        nodes: [],
-        connections: {},
+    const result = await workflowGraph.invoke(
+      {
+        rawInput: JSON.stringify({
+          nodes: [],
+          connections: {},
+        }),
+      },
+      createFlowProofRunConfig({
+        threadId: "workflow-missing-name-test",
+        source: "test",
       }),
-    });
+    );
 
     expect(result.diagnostics).toContainEqual(
       expect.objectContaining({

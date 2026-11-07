@@ -1,5 +1,10 @@
 
-import { END, START, StateGraph } from "@langchain/langgraph";
+import {
+  END,
+  START,
+  StateGraph,
+  MemorySaver,
+} from "@langchain/langgraph";
 import { FlowProofState } from "./state.js";
 
 // Node 1 : transforme le JSON brut en objet JavaScript.
@@ -79,6 +84,8 @@ const validateInput = (state: typeof FlowProofState.State) => {
 
   return {};
 };
+export const workflowCheckpointer = new MemorySaver();
+
 
 // Construction et compilation du graphe.
 export const workflowGraph = new StateGraph(FlowProofState)
@@ -90,4 +97,6 @@ export const workflowGraph = new StateGraph(FlowProofState)
     valid: "validateInput",
   })
   .addEdge("validateInput", END)
-  .compile();
+	.compile({
+  checkpointer: workflowCheckpointer,
+});
