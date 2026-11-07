@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeAfterParsing } from "../src/graph/workflow.graph.js";
+import { routeAfterParsing } from "../src/graph/routing.js";
 
 describe("routeAfterParsing", () => {
   it("routes invalid JSON to END", () => {

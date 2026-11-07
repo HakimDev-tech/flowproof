@@ -1,102 +1,26 @@
-
 import {
   END,
   START,
   StateGraph,
-  MemorySaver,
 } from "@langchain/langgraph";
+import type { BaseCheckpointSaver } from "@langchain/langgraph-checkpoint";
+
 import { FlowProofState } from "./state.js";
+import { parseInput } from "./nodes/parse-input.js";
+import { validateInput } from "./nodes/validate-input.js";
+import { routeAfterParsing } from "./routing.js";
 
-// Node 1 : transforme le JSON brut en objet JavaScript.
-const parseInput = (state: typeof FlowProofState.State) => {
-  try {
-    const parsedWorkflow: unknown = JSON.parse(state.rawInput);
-
-    return { parsedWorkflow };
-  } catch (error) {
-  if (!(error instanceof SyntaxError)) {
-    throw error;
-  }
-
-  return {
-    parsedWorkflow: null,
-    diagnostics: [
-      {
-        code: "INVALID_JSON",
-        severity: "error" as const,
-        message: "Input is not valid JSON",
-      },
-    ],
-  };
-}
-};
-
-export function routeAfterParsing(
-  state: typeof FlowProofState.State,
+export function createWorkflowGraph(
+  checkpointer: BaseCheckpointSaver,
 ) {
-  if (state.parsedWorkflow === null) {
-    return "invalid";
-  }
-
-  return "valid";
+  return new StateGraph(FlowProofState)
+    .addNode("parseInput", parseInput)
+    .addNode("validateInput", validateInput)
+    .addEdge(START, "parseInput")
+    .addConditionalEdges("parseInput", routeAfterParsing, {
+      invalid: END,
+      valid: "validateInput",
+    })
+    .addEdge("validateInput", END)
+    .compile({ checkpointer });
 }
-
-// Node 2 : vérifie la structure minimale du workflow.
-const validateInput = (state: typeof FlowProofState.State) => {
-  const workflow = state.parsedWorkflow;
-
-  // Le parsing a déjà échoué : ne pas produire un second diagnostic.
-  if (workflow === null) {
-    return {};
-  }
-
-  if (
-    typeof workflow !== "object" ||
-    Array.isArray(workflow)
-  ) {
-    return {
-      diagnostics: [
-        {
-          code: "INVALID_WORKFLOW_ROOT",
-          severity: "error" as const,
-          message: "Workflow must be a JSON object",
-        },
-      ],
-    };
-  }
-
-  const workflowObject = workflow as Record<string, unknown>;
-
-  if (
-    typeof workflowObject.name !== "string" ||
-    workflowObject.name.trim() === ""
-  ) {
-    return {
-      diagnostics: [
-        {
-          code: "MISSING_WORKFLOW_NAME",
-          severity: "warning" as const,
-          message: "Workflow name is missing",
-        },
-      ],
-    };
-  }
-
-  return {};
-};
-export const workflowCheckpointer = new MemorySaver();
-
-
-// Construction et compilation du graphe.
-export const workflowGraph = new StateGraph(FlowProofState)
-  .addNode("parseInput", parseInput)
-  .addNode("validateInput", validateInput)
-  .addEdge(START, "parseInput")
-  .addConditionalEdges("parseInput", routeAfterParsing, {
-    invalid: END,
-    valid: "validateInput",
-  })
-  .addEdge("validateInput", END)
-	.compile({
-  checkpointer: workflowCheckpointer,
-});
