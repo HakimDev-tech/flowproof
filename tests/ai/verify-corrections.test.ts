@@ -15,13 +15,11 @@ describe("verifyCorrections", () => {
 
   it("reports persistent diagnostics independent of diagnostic ordering", () => {
     const initial = [
-      { code: "A", severity: "warning" as const, message: "A" },
-      { code: "B", severity: "error" as const, message: "B" },
+      { code: "MISSING_WORKFLOW_NAME", severity: "warning" as const, message: "Missing name" },
     ];
     const result = revalidateWorkflow({}, initial, createWorkflowFingerprint({}));
-    expect(verifyCorrections(["A", "B"], initial, result)).toEqual([
-      { diagnosticCode: "A", outcome: "persistent" },
-      { diagnosticCode: "B", outcome: "persistent" },
+    expect(verifyCorrections(["MISSING_WORKFLOW_NAME"], initial, result)).toEqual([
+      { diagnosticCode: "MISSING_WORKFLOW_NAME", outcome: "persistent" },
     ]);
   });
 

@@ -21,7 +21,7 @@ describe("revalidateWorkflow", () => {
 
   it("keeps persistent diagnostics and identifies newly introduced diagnostics", () => {
     const workflow = { name: "", nodes: [], connections: {} };
-    const initial = [{ ...missingName, path: "/name" }];
+    const initial = [missingName];
     const result = revalidateWorkflow(workflow, initial, createWorkflowFingerprint(workflow));
     expect(result.status).toBe("invalid");
     expect(result.unresolvedDiagnostics).toEqual(initial);
