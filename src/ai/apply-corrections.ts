@@ -200,7 +200,7 @@ export function applyCorrections(
   const candidate = cloneJsonValue(workflow) as Record<string, unknown>;
 
   const appliedDiagnosticCodes: string[] = [];
-  const manualDiagnosticCodes: string[] = [];
+  const manualDiagnosticCodes: string[] = [];\n  const appliedOperations: Array<{ diagnosticCode: string; operation: "add" | "replace" | "remove"; path: string }> = [];
 
   for (const proposal of validatedCorrections.proposals) {
     if (!approvedCodes.has(proposal.diagnosticCode)) {
@@ -214,7 +214,7 @@ export function applyCorrections(
 
     applyAutomaticCorrection(candidate, proposal);
 
-    appliedDiagnosticCodes.push(proposal.diagnosticCode);
+    appliedDiagnosticCodes.push(proposal.diagnosticCode);\n    appliedOperations.push({ diagnosticCode: proposal.diagnosticCode, operation: proposal.operation, path: proposal.change.path });
   }
 
   const resultingFingerprint = createWorkflowFingerprint(candidate);

@@ -12,7 +12,7 @@ export type CreateAuditEntryInput = {
   rawApproval: unknown;
   appliedDiagnosticCodes: string[];
   rejectedDiagnosticCodes: string[];
-  manualDiagnosticCodes: string[];
+  manualDiagnosticCodes: string[];\n  appliedOperations: Array<{ diagnosticCode: string; operation: "add" | "replace" | "remove"; path: string }>;
   timestamp?: string;
 };
 

@@ -20,7 +20,7 @@ export const AuditEntrySchema = z.object({
   decisions: z.array(AuditDecisionSchema),
   appliedDiagnosticCodes: z.array(z.string().min(1)),
   rejectedDiagnosticCodes: z.array(z.string().min(1)),
-  manualDiagnosticCodes: z.array(z.string().min(1)),
+  manualDiagnosticCodes: z.array(z.string().min(1)),\n  appliedOperations: z.array(z.object({\n    diagnosticCode: z.string().min(1),\n    operation: z.enum(["add", "replace", "remove"]),\n    path: z.string().min(1),\n  }).strict()).optional(),
   status: AuditStatusSchema,
   // Optional for backward compatibility with audit records created before phase 3.5.
   revalidation: RevalidationResultSchema.optional(),
